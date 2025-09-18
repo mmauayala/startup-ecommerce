@@ -4,10 +4,9 @@ import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "category")
 public class CategoryEntity {

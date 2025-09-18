@@ -9,6 +9,7 @@ import com.startup.ecommerce.v1.entities.ProductVariantEntity;
 import com.startup.ecommerce.v1.repositories.ProductRepository;
 import com.startup.ecommerce.v1.repositories.ProductVariantRepository;
 import com.startup.ecommerce.v1.repositories.CategoryRepository;
+import com.startup.ecommerce.v1.services.StockService;
 import com.startup.ecommerce.v1.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final CategoryRepository categoryRepository;
+    private final StockService stockService;
 
     @Override
     public ProductDto createProduct(ProductDto productDto) {
@@ -140,7 +142,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void recalculateProductStock(ProductEntity product) {
-        int sum = product.getVariants() == null ? 0 : product.getVariants().stream().mapToInt(ProductVariantEntity::getStock).sum();
+        
+        int sum = product.getVariants() == null ? 0 : product.getVariants().stream()
+                .mapToInt(variant -> stockService.getAvailableStock(variant.getId()))
+                .sum();
         product.setStock(sum);
         productRepository.save(product);
     }
@@ -167,9 +172,13 @@ public class ProductServiceImpl implements ProductService {
                 .colorName(dto.getColorName())
                 .colorHex(colorHex)
                 .sku(dto.getSku() != null && !dto.getSku().isBlank() ? dto.getSku() : generateSku(product, size.name(), colorHex))
-                .stock(dto.getStock())
+                .stock(dto.getStock()) // Mantener para compatibilidad
                 .build();
         ProductVariantEntity saved = productVariantRepository.save(variant);
+        
+        // Crear stock en la nueva entidad
+        stockService.createStock(saved, dto.getStock());
+        
         if (product.getVariants() != null) product.getVariants().add(saved);
         recalculateProductStock(product);
         return ProductVariantDto.builder()
@@ -178,7 +187,7 @@ public class ProductServiceImpl implements ProductService {
                 .colorName(saved.getColorName())
                 .colorHex(saved.getColorHex())
                 .sku(saved.getSku())
-                .stock(saved.getStock())
+                .stock(stockService.getAvailableStock(saved.getId())) // Stock desde StockService
                 .build();
     }
 
@@ -193,7 +202,7 @@ public class ProductServiceImpl implements ProductService {
                         .colorName(v.getColorName())
                         .colorHex(v.getColorHex())
                         .sku(v.getSku())
-                        .stock(v.getStock())
+                        .stock(stockService.getAvailableStock(v.getId())) // Stock desde StockService
                         .build())
                 .toList();
     }
@@ -215,11 +224,15 @@ public class ProductServiceImpl implements ProductService {
         variant.setSize(size);
         variant.setColorName(dto.getColorName());
         variant.setColorHex(colorHex);
-        variant.setStock(dto.getStock());
+        variant.setStock(dto.getStock()); // Mantener para compatibilidad
         if (dto.getSku() != null && !dto.getSku().isBlank()) {
             variant.setSku(dto.getSku());
         }
         ProductVariantEntity updated = productVariantRepository.save(variant);
+        
+        // Actualizar stock en la nueva entidad
+        stockService.updateStock(variantId, dto.getStock());
+        
         recalculateProductStock(product);
         return ProductVariantDto.builder()
                 .id(updated.getId())
@@ -227,7 +240,7 @@ public class ProductServiceImpl implements ProductService {
                 .colorName(updated.getColorName())
                 .colorHex(updated.getColorHex())
                 .sku(updated.getSku())
-                .stock(updated.getStock())
+                .stock(stockService.getAvailableStock(updated.getId())) // Stock desde StockService
                 .build();
     }
 
@@ -238,6 +251,7 @@ public class ProductServiceImpl implements ProductService {
         if (!variant.getProduct().getId().equals(product.getId())) {
             throw new IllegalArgumentException("La variante no pertenece al producto indicado");
         }
+        // El stock se elimina automáticamente por CASCADE en la entidad
         productVariantRepository.delete(variant);
         if (product.getVariants() != null) product.getVariants().removeIf(v -> v.getId().equals(variantId));
         recalculateProductStock(product);
