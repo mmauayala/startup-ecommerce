@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/products")
@@ -70,6 +71,7 @@ public class ProductController {
     @Operation(summary = "Crear producto", responses = {
         @ApiResponse(responseCode = "201", description = "Producto creado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDto.class)))
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productDto) {
         return ResponseEntity.status(201).body(productService.createProduct(productDto));
@@ -79,6 +81,7 @@ public class ProductController {
         @ApiResponse(responseCode = "200", description = "Producto actualizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDto.class))),
         @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @RequestBody ProductDto productDto) {
         ProductDto updated = productService.updateProduct(id, productDto);
@@ -90,6 +93,7 @@ public class ProductController {
         @ApiResponse(responseCode = "204", description = "Producto eliminado"),
         @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
@@ -97,6 +101,7 @@ public class ProductController {
     }
 
     @Operation(summary = "Agregar variante a un producto")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{productId}/variants")
     public ResponseEntity<ProductVariantDto> addVariant(@PathVariable Long productId, @Valid @RequestBody CreateProductVariantDto dto) {
         return ResponseEntity.status(201).body(productService.addVariant(productId, dto));
@@ -109,12 +114,14 @@ public class ProductController {
     }
 
     @Operation(summary = "Actualizar una variante")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{productId}/variants/{variantId}")
     public ResponseEntity<ProductVariantDto> updateVariant(@PathVariable Long productId, @PathVariable Long variantId, @Valid @RequestBody CreateProductVariantDto dto) {
         return ResponseEntity.ok(productService.updateVariant(productId, variantId, dto));
     }
 
     @Operation(summary = "Eliminar una variante")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{productId}/variants/{variantId}")
     public ResponseEntity<Void> deleteVariant(@PathVariable Long productId, @PathVariable Long variantId) {
         productService.deleteVariant(productId, variantId);

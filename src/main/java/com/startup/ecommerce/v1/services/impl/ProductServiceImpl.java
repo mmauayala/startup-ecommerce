@@ -8,6 +8,7 @@ import com.startup.ecommerce.v1.entities.ProductEntity;
 import com.startup.ecommerce.v1.entities.ProductVariantEntity;
 import com.startup.ecommerce.v1.repositories.ProductRepository;
 import com.startup.ecommerce.v1.repositories.ProductVariantRepository;
+import com.startup.ecommerce.v1.repositories.CategoryRepository;
 import com.startup.ecommerce.v1.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,13 @@ import com.startup.ecommerce.v1.entities.enums.Size;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public ProductDto createProduct(ProductDto productDto) {
         ProductEntity entity = toEntity(productDto);
+        // set categoría
+        applyCategory(entity, productDto);
         ProductEntity saved = productRepository.save(entity);
         return toDto(saved);
     }
@@ -35,7 +39,8 @@ public class ProductServiceImpl implements ProductService {
         entity.setPrice(productDto.getPrice());
         entity.setImage(productDto.getImage());
         entity.setStock(productDto.getStock());
-        // Falta lógica para actualizar categoría correctamente
+        // actualizar categoría correctamente
+        applyCategory(entity, productDto);
         ProductEntity updated = productRepository.save(entity);
         return toDto(updated);
     }
@@ -108,6 +113,19 @@ public class ProductServiceImpl implements ProductService {
                         .stock(v.getStock())
                         .build()).toList() : java.util.List.of())
                 .build();
+    }
+
+    private void applyCategory(ProductEntity entity, ProductDto dto) {
+        if (dto.getCategory() == null) return;
+        Long categoryId = dto.getCategory().getId();
+        String categoryName = dto.getCategory().getName();
+        if (categoryId != null) {
+            entity.setCategory(categoryRepository.findById(categoryId).orElseThrow());
+            return;
+        }
+        if (categoryName != null && !categoryName.isBlank()) {
+            entity.setCategory(categoryRepository.findByNameIgnoreCase(categoryName).orElseThrow());
+        }
     }
 
     private ProductEntity toEntity(ProductDto dto) {
