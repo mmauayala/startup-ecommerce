@@ -1,6 +1,7 @@
 package com.startup.ecommerce.v1.dto;
 
 import lombok.*;
+import com.startup.ecommerce.v1.entities.enums.Size;
 
 @Data
 @AllArgsConstructor
@@ -8,7 +9,7 @@ import lombok.*;
 @Builder
 public class ProductVariantDto {
     private Long id;
-    private String size;
+    private Size size;
     private String colorName;
     private String colorHex;
     private String sku;

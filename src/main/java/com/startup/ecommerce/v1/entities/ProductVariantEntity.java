@@ -2,9 +2,11 @@ package com.startup.ecommerce.v1.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.startup.ecommerce.v1.entities.enums.Size;
 
 @Entity
-@Table(name = "product_variant")
+@Table(name = "product_variant",
+       uniqueConstraints = @UniqueConstraint(name = "uk_product_variant_unique", columnNames = {"product_id","size","color_hex"}))
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,13 +20,14 @@ public class ProductVariantEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String size; // XS, S, M, L, XL, XXL
+    private Size size; // XS, S, M, L, XL, XXL
 
     @Column(nullable = false)
     private String colorName;
 
-    @Column(nullable = false)
+    @Column(name = "color_hex", nullable = false)
     private String colorHex;
 
     @Column(nullable = false, unique = true)

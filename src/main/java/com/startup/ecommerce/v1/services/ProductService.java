@@ -1,6 +1,8 @@
 package com.startup.ecommerce.v1.services;
 
 import com.startup.ecommerce.v1.dto.ProductDto;
+import com.startup.ecommerce.v1.dto.ProductVariantDto;
+import com.startup.ecommerce.v1.dto.CreateProductVariantDto;
 import java.util.List;
 
 public interface ProductService {
@@ -27,4 +29,10 @@ public interface ProductService {
         int page,
         int sizePage
     );
+
+    // Variants
+    ProductVariantDto addVariant(Long productId, CreateProductVariantDto dto);
+    List<ProductVariantDto> listVariants(Long productId);
+    ProductVariantDto updateVariant(Long productId, Long variantId, CreateProductVariantDto dto);
+    void deleteVariant(Long productId, Long variantId);
 }

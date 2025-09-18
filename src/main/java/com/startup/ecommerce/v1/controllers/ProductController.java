@@ -2,6 +2,8 @@ package com.startup.ecommerce.v1.controllers;
 
 import com.startup.ecommerce.v1.dto.ProductDto;
 import com.startup.ecommerce.v1.services.ProductService;
+import com.startup.ecommerce.v1.dto.CreateProductVariantDto;
+import com.startup.ecommerce.v1.dto.ProductVariantDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/products")
@@ -90,6 +93,31 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Agregar variante a un producto")
+    @PostMapping("/{productId}/variants")
+    public ResponseEntity<ProductVariantDto> addVariant(@PathVariable Long productId, @Valid @RequestBody CreateProductVariantDto dto) {
+        return ResponseEntity.status(201).body(productService.addVariant(productId, dto));
+    }
+
+    @Operation(summary = "Listar variantes de un producto")
+    @GetMapping("/{productId}/variants")
+    public ResponseEntity<List<ProductVariantDto>> listVariants(@PathVariable Long productId) {
+        return ResponseEntity.ok(productService.listVariants(productId));
+    }
+
+    @Operation(summary = "Actualizar una variante")
+    @PutMapping("/{productId}/variants/{variantId}")
+    public ResponseEntity<ProductVariantDto> updateVariant(@PathVariable Long productId, @PathVariable Long variantId, @Valid @RequestBody CreateProductVariantDto dto) {
+        return ResponseEntity.ok(productService.updateVariant(productId, variantId, dto));
+    }
+
+    @Operation(summary = "Eliminar una variante")
+    @DeleteMapping("/{productId}/variants/{variantId}")
+    public ResponseEntity<Void> deleteVariant(@PathVariable Long productId, @PathVariable Long variantId) {
+        productService.deleteVariant(productId, variantId);
         return ResponseEntity.noContent().build();
     }
 }
