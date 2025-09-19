@@ -9,7 +9,7 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "product")
-public class ProductEntity {
+public class ProductEntity extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
