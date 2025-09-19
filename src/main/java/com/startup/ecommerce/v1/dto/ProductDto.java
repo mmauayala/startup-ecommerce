@@ -13,5 +13,6 @@ public class ProductDto {
     private CategorySimpleDto category;
     private String image;
     private Integer stock;
+    private Boolean featured;
     private java.util.List<ProductVariantDto> variants;
 }

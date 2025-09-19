@@ -31,6 +31,12 @@ public class ProductServiceImpl implements ProductService {
         // set categoría
         applyCategory(entity, productDto);
         ProductEntity saved = productRepository.save(entity);
+        
+        // Crear stock para el producto si se especifica
+        if (productDto.getStock() != null && productDto.getStock() > 0) {
+            stockService.createStock(saved, productDto.getStock());
+        }
+        
         return toDto(saved);
     }
 
@@ -40,15 +46,22 @@ public class ProductServiceImpl implements ProductService {
         entity.setName(productDto.getName());
         entity.setPrice(productDto.getPrice());
         entity.setImage(productDto.getImage());
-        entity.setStock(productDto.getStock());
         // actualizar categoría correctamente
         applyCategory(entity, productDto);
         ProductEntity updated = productRepository.save(entity);
+        
+        // Actualizar stock si se especifica
+        if (productDto.getStock() != null) {
+            stockService.updateStock(id, productDto.getStock());
+        }
+        
         return toDto(updated);
     }
 
     @Override
     public void deleteProduct(Long id) {
+        // Eliminar stock asociado
+        stockService.deleteStock(id);
         productRepository.deleteById(id);
     }
 
@@ -104,7 +117,8 @@ public class ProductServiceImpl implements ProductService {
                 .name(entity.getName())
                 .price(entity.getPrice())
                 .image(entity.getImage())
-                .stock(entity.getStock())
+                .stock(stockService.getAvailableStock(entity.getId())) // Stock desde StockService
+                .featured(entity.getFeatured())
                 .category(entity.getCategory() != null ? new CategorySimpleDto(entity.getCategory().getId(), entity.getCategory().getName()) : null)
                 .variants(entity.getVariants() != null ? entity.getVariants().stream().map(v -> com.startup.ecommerce.v1.dto.ProductVariantDto.builder()
                         .id(v.getId())
@@ -112,7 +126,7 @@ public class ProductServiceImpl implements ProductService {
                         .colorName(v.getColorName())
                         .colorHex(v.getColorHex())
                         .sku(v.getSku())
-                        .stock(v.getStock())
+                        .stock(stockService.getAvailableStock(entity.getId())) // Stock del producto, no de la variante
                         .build()).toList() : java.util.List.of())
                 .build();
     }
@@ -136,19 +150,11 @@ public class ProductServiceImpl implements ProductService {
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setImage(dto.getImage());
-        entity.setStock(dto.getStock());
+        entity.setFeatured(dto.getFeatured());
         
         return entity;
     }
 
-    private void recalculateProductStock(ProductEntity product) {
-        
-        int sum = product.getVariants() == null ? 0 : product.getVariants().stream()
-                .mapToInt(variant -> stockService.getAvailableStock(variant.getId()))
-                .sum();
-        product.setStock(sum);
-        productRepository.save(product);
-    }
 
     private String generateSku(ProductEntity product, String size, String colorHex) {
         String normalizedSize = size.toUpperCase();
@@ -172,28 +178,25 @@ public class ProductServiceImpl implements ProductService {
                 .colorName(dto.getColorName())
                 .colorHex(colorHex)
                 .sku(dto.getSku() != null && !dto.getSku().isBlank() ? dto.getSku() : generateSku(product, size.name(), colorHex))
-                .stock(dto.getStock()) // Mantener para compatibilidad
                 .build();
         ProductVariantEntity saved = productVariantRepository.save(variant);
         
-        // Crear stock en la nueva entidad
-        stockService.createStock(saved, dto.getStock());
-        
         if (product.getVariants() != null) product.getVariants().add(saved);
-        recalculateProductStock(product);
+        
         return ProductVariantDto.builder()
                 .id(saved.getId())
                 .size(saved.getSize())
                 .colorName(saved.getColorName())
                 .colorHex(saved.getColorHex())
                 .sku(saved.getSku())
-                .stock(stockService.getAvailableStock(saved.getId())) // Stock desde StockService
+                .stock(stockService.getAvailableStock(productId)) // Stock del producto
                 .build();
     }
 
     @Override
     public List<ProductVariantDto> listVariants(Long productId) {
         ProductEntity product = productRepository.findById(productId).orElseThrow();
+        Integer productStock = stockService.getAvailableStock(productId);
         return (product.getVariants() == null ? java.util.Set.<ProductVariantEntity>of() : product.getVariants())
                 .stream()
                 .map(v -> ProductVariantDto.builder()
@@ -202,7 +205,7 @@ public class ProductServiceImpl implements ProductService {
                         .colorName(v.getColorName())
                         .colorHex(v.getColorHex())
                         .sku(v.getSku())
-                        .stock(stockService.getAvailableStock(v.getId())) // Stock desde StockService
+                        .stock(productStock) // Stock del producto para todas las variantes
                         .build())
                 .toList();
     }
@@ -224,23 +227,18 @@ public class ProductServiceImpl implements ProductService {
         variant.setSize(size);
         variant.setColorName(dto.getColorName());
         variant.setColorHex(colorHex);
-        variant.setStock(dto.getStock()); // Mantener para compatibilidad
         if (dto.getSku() != null && !dto.getSku().isBlank()) {
             variant.setSku(dto.getSku());
         }
         ProductVariantEntity updated = productVariantRepository.save(variant);
         
-        // Actualizar stock en la nueva entidad
-        stockService.updateStock(variantId, dto.getStock());
-        
-        recalculateProductStock(product);
         return ProductVariantDto.builder()
                 .id(updated.getId())
                 .size(updated.getSize())
                 .colorName(updated.getColorName())
                 .colorHex(updated.getColorHex())
                 .sku(updated.getSku())
-                .stock(stockService.getAvailableStock(updated.getId())) // Stock desde StockService
+                .stock(stockService.getAvailableStock(productId)) // Stock del producto
                 .build();
     }
 
@@ -251,9 +249,7 @@ public class ProductServiceImpl implements ProductService {
         if (!variant.getProduct().getId().equals(product.getId())) {
             throw new IllegalArgumentException("La variante no pertenece al producto indicado");
         }
-        // El stock se elimina automáticamente por CASCADE en la entidad
         productVariantRepository.delete(variant);
         if (product.getVariants() != null) product.getVariants().removeIf(v -> v.getId().equals(variantId));
-        recalculateProductStock(product);
     }
 }

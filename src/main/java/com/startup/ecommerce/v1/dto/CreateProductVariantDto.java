@@ -1,7 +1,6 @@
 package com.startup.ecommerce.v1.dto;
 
 import com.startup.ecommerce.v1.entities.enums.Size;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -26,8 +25,4 @@ public class CreateProductVariantDto {
 
     @jakarta.validation.constraints.Size(max = 60)
     private String sku; // opcional; si no llega se genera
-
-    @NotNull
-    @Min(0)
-    private Integer stock;
 }

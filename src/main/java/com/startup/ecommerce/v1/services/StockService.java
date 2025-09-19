@@ -1,22 +1,23 @@
 package com.startup.ecommerce.v1.services;
 
-import com.startup.ecommerce.v1.entities.ProductVariantEntity;
+import com.startup.ecommerce.v1.entities.ProductEntity;
 import com.startup.ecommerce.v1.entities.StockEntity;
 
 public interface StockService {
-
     
-    Integer getAvailableStock(Long variantId);
+    Integer getAvailableStock(Long productId);
     
-    Integer getTotalStock(Long variantId);
+    Integer getTotalStock(Long productId);
     
-    StockEntity createStock(ProductVariantEntity variant, Integer quantity);
+    StockEntity createStock(ProductEntity product, Integer quantity);
     
-    StockEntity updateStock(Long variantId, Integer quantity);
+    StockEntity updateStock(Long productId, Integer quantity);
     
-    void reserveStock(Long variantId, Integer quantity);
+    void reserveStock(Long productId, Integer quantity);
     
-    void releaseStock(Long variantId, Integer quantity);
+    void releaseStock(Long productId, Integer quantity);
     
-    void consumeStock(Long variantId, Integer quantity);
+    void consumeStock(Long productId, Integer quantity);
+    
+    void deleteStock(Long productId);
 }

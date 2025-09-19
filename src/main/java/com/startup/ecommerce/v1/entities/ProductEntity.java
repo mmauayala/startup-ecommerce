@@ -28,10 +28,7 @@ public class ProductEntity extends BaseAuditEntity {
     private String image;
 
     @Column(nullable = false)
-    private Integer stock;
-
-    @Column(nullable = false)
-    private boolean featured = false;
+    private Boolean featured = false;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.Set<ProductVariantEntity> variants;

@@ -15,22 +15,18 @@ public class StockEntity extends BaseAuditEntity {
     private Long id;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_variant_id", nullable = false, unique = true)
-    private ProductVariantEntity variant;
+    @JoinColumn(name = "product_id", nullable = false, unique = true)
+    private ProductEntity product;
     
     @Column(nullable = false)
-    private Integer quantity;
+    private Integer quantity; // Stock total en almacén
     
     @Builder.Default
     @Column(nullable = false)
-    private Integer reserved = 0;
+    private Integer reserved = 0; // Stock reservado (ej. en carritos)
     
-    @Column(nullable = false)
-    private Integer available;
-    
-    @PrePersist
-    @PreUpdate
-    private void calculateAvailable() {
-        this.available = this.quantity - this.reserved;
+    @Transient // No se mapea a la base de datos, se calcula dinámicamente
+    public Integer getAvailable() {
+        return quantity - reserved;
     }
 }
