@@ -3,6 +3,7 @@ package com.startup.ecommerce.v1.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import com.startup.ecommerce.v1.entities.enums.Size;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "product_variant",
@@ -32,4 +33,7 @@ public class ProductVariantEntity {
 
     @Column(nullable = false, unique = true)
     private String sku;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 }

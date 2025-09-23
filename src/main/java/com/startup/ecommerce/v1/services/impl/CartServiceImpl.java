@@ -10,9 +10,13 @@ import com.startup.ecommerce.v1.repositories.ProductRepository;
 import com.startup.ecommerce.v1.repositories.ProductVariantRepository;
 import com.startup.ecommerce.v1.services.CartService;
 import com.startup.ecommerce.v1.services.StockService;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.startup.ecommerce.v1.entities.UserEntity;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +33,7 @@ public class CartServiceImpl implements CartService {
     public CartEntity getOrCreateCart(Long userId) {
         return cartRepository.findByUserId(userId).orElseGet(() -> {
             CartEntity cart = CartEntity.builder()
-                    .user(com.startup.ecommerce.v1.entities.UserEntity.builder().id(userId).build())
+                    .user(UserEntity.builder().id(userId).build())
                     .build();
             return cartRepository.save(cart);
         });
@@ -38,7 +42,7 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartEntity getCart(Long userId) {
         return cartRepository.findByUserId(userId).orElseGet(() -> CartEntity.builder()
-                .user(com.startup.ecommerce.v1.entities.UserEntity.builder().id(userId).build())
+                .user(UserEntity.builder().id(userId).build())
                 .build());
     }
 
@@ -122,10 +126,10 @@ public class CartServiceImpl implements CartService {
     public void clearCart(Long userId) {
         CartEntity cart = getOrCreateCart(userId);
         if (cart.getItems() != null) {
-            for (CartItemEntity item : cart.getItems()) {
-                stockService.releaseStock(item.getProduct().getId(), item.getQuantity());
+            for (CartItemEntity item : cart.getItems()) { // Bucle que recorre todos los items del carrito
+                stockService.releaseStock(item.getProduct().getId(), item.getQuantity()); // Liberar el stock del producto || Cantidad a liberar 
             }
-            cart.getItems().clear();
+            cart.getItems().clear(); // Elimina todos los items de la lista del carrito
         }
         cart.setTotalPrice(0.0);
         cartRepository.save(cart);
