@@ -3,12 +3,13 @@ package com.startup.ecommerce.v1.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+@EqualsAndHashCode(callSuper = true)
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "stock")
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class StockEntity extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

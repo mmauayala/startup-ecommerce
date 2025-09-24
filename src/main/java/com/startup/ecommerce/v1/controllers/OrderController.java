@@ -25,14 +25,36 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@Tag(name = "Orders", description = "Endpoints para gestión de órdenes")
+@Tag(name = "Orders", description = """
+    Endpoints para gestión de órdenes de compra.
+    
+    Flujo de estados de una orden:
+    PENDIENTE → PAGADO → PREPARANDO → ENVIADO → ENTREGADO
+    (En cualquier momento puede pasar a CANCELADO)
+    
+    Roles y permisos:
+    - ADMIN: Puede ver y gestionar todas las órdenes
+    - CLIENTE: Solo puede gestionar sus propias órdenes
+    """)
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final OrderService orderService;
 
     @PostMapping
-    @Operation(summary = "Crear una nueva orden", description = "Crea una nueva orden a partir del carrito del usuario")
+    @Operation(
+        summary = "Crear una nueva orden",
+        description = """
+            Crea una nueva orden a partir del carrito actual del usuario.
+            
+            Proceso:
+            1. Valida que el carrito no esté vacío
+            2. Crea la orden con los items del carrito
+            3. Reserva el stock de los productos
+            4. Limpia el carrito
+            
+            La orden se crea en estado PENDIENTE.
+            """)
     @PreAuthorize("hasRole('CLIENTE')")
     public ResponseEntity<OrderDto> createOrder(
             @AuthenticationPrincipal UserEntity user,
@@ -64,7 +86,23 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Actualizar estado de orden", description = "Actualiza el estado de una orden específica")
+    @Operation(
+        summary = "Actualizar estado de orden", 
+        description = """
+            Actualiza el estado de una orden específica. Solo administradores pueden usar este endpoint.
+            
+            Transiciones permitidas:
+            - PENDIENTE → PAGADO, CANCELADO
+            - PAGADO → PREPARANDO, CANCELADO
+            - PREPARANDO → ENVIADO, CANCELADO
+            - ENVIADO → ENTREGADO, CANCELADO
+            - ENTREGADO → (estado final)
+            - CANCELADO → (estado final)
+            
+            Efectos:
+            - Al marcar como ENTREGADO: se consume el stock reservado
+            - Al marcar como CANCELADO: se libera el stock reservado
+            """)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OrderDto> updateOrderStatus(
             @Parameter(description = "ID de la orden") @PathVariable Long id,

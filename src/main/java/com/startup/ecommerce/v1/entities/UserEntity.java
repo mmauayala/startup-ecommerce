@@ -5,12 +5,13 @@ import com.startup.ecommerce.v1.entities.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+@EqualsAndHashCode(callSuper = true)
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "user")
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class UserEntity extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
