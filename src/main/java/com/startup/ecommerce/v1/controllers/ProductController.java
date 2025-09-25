@@ -19,7 +19,24 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-@Tag(name = "Productos", description = "Operaciones sobre productos")
+@Tag(name = "Productos", description = """
+    Gestión completa de productos y sus variantes.
+    
+    Funcionalidades principales:
+    - Búsqueda avanzada con filtros
+    - Gestión de productos destacados
+    - CRUD completo de productos (solo admin)
+    - Gestión de variantes (tallas, colores)
+    - Control de stock
+    
+    Los endpoints públicos son:
+    - Listado de productos
+    - Búsqueda con filtros
+    - Detalle de producto
+    - Productos destacados
+    
+    El resto requiere autenticación ADMIN.
+    """)
 public class ProductController {
     private final ProductService productService;
 
@@ -31,9 +48,37 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
-    @Operation(summary = "Buscar productos con filtros avanzados", responses = {
-        @ApiResponse(responseCode = "200", description = "Listado filtrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDto.class)))
-    })
+    @Operation(
+        summary = "Buscar productos con filtros avanzados",
+        description = """
+            Búsqueda avanzada de productos con múltiples criterios:
+            
+            Filtros disponibles:
+            - search: Búsqueda por nombre o descripción
+            - category: Filtrar por categoría
+            - size: Filtrar por talla (XS, S, M, L, XL, XXL)
+            - color: Filtrar por color
+            - minPrice/maxPrice: Rango de precios
+            
+            Ordenamiento (parámetro sort):
+            - price_asc: Precio ascendente
+            - price_desc: Precio descendente
+            - name_asc: Nombre A-Z
+            - name_desc: Nombre Z-A
+            - created_desc: Más recientes primero
+            
+            Paginación:
+            - page: Número de página (0-based)
+            - sizePage: Elementos por página
+            """,
+        responses = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Listado filtrado y paginado de productos",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDto.class))
+            )
+        }
+    )
     @GetMapping("/search")
     public ResponseEntity<List<ProductDto>> searchProducts(
             @RequestParam(required = false) String search,

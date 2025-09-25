@@ -15,7 +15,27 @@ public class OpenApiConfig {
                 .info(new Info()
                     .title("Startup Ecommerce API")
                     .version("1.0")
-                    .description("API REST para la gestión de un e-commerce, incluyendo productos, órdenes, carrito y usuarios.")
+                    .description("""
+                        API REST para la gestión de un e-commerce.
+                        
+                        Funcionalidades principales:
+                        - Gestión de productos y categorías
+                        - Carrito de compras
+                        - Proceso de órdenes
+                        - Autenticación y autorización
+                        - Control de stock
+                        
+                        Roles de usuario:
+                        - ADMIN: Acceso total al sistema
+                        - CLIENTE: Gestión de su carrito y órdenes
+                        
+                        Todos los endpoints retornan los siguientes códigos de error comunes:
+                        - 400: Error de validación o solicitud incorrecta
+                        - 401: No autenticado
+                        - 403: No autorizado
+                        - 404: Recurso no encontrado
+                        - 500: Error interno del servidor
+                        """)
                 )
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new io.swagger.v3.oas.models.Components()

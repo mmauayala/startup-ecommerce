@@ -18,7 +18,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
-@Tag(name = "Categorías", description = "Operaciones sobre categorías")
+@Tag(name = "Categorías", description = """
+    Gestión de categorías de productos.
+    
+    Las categorías son utilizadas para organizar los productos y facilitar su búsqueda.
+    Solo los administradores pueden crear, modificar o eliminar categorías.
+    Las categorías son públicas y pueden ser consultadas sin autenticación.
+    """)
 public class CategoryController {
     private final CategoryRepository categoryRepository;
 
